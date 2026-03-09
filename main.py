@@ -6,6 +6,16 @@ import random
 from replit import db
 from keepAlive import keep_alive
 
+
+class MemoryDB(dict):
+  def keys(self):
+    return super().keys()
+
+
+if db is None:
+  print("Warning: Replit DB not configured. Falling back to in-memory storage.")
+  db = MemoryDB()
+
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
@@ -80,13 +90,13 @@ async def on_message(message):
     await message.channel.send(originalMessage)
 
   if db["responding"]:
-    options = starterEncouragements
+    options = list(starterEncouragements)
 
     if "encouragements" in db.keys():
-      options = options.extend(db["encouragements"])
+      options.extend(db["encouragements"])
 
-    if any(word in msg for word in sadWords):
-      await message.channel.send(random.choice(db["encouragements"]))
+    if any(word in msg.lower() for word in sadWords):
+      await message.channel.send(random.choice(options))
 
   if msg.startswith("$new"):
     encouragingMessage = msg.split("$new ", 1)[1]
