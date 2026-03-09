@@ -16,6 +16,20 @@ starterEncouragements = [
   "Cheer up!", "Hang in there.", "You are a great person!"
 ]
 
+originalOpeners = [
+  "Today is a fresh start",
+  "Your effort matters",
+  "You are stronger than you feel",
+  "Small steps still count"
+]
+
+originalClosers = [
+  "keep moving forward 🌟",
+  "your future self will thank you 💪",
+  "you've got this 🔥",
+  "one breath at a time 🌈"
+]
+
 if "responding" not in db.keys():
   db["responding"] = True
 
@@ -58,6 +72,12 @@ async def on_message(message):
   if msg.startswith("$inspire"):
     quote = getQuote()
     await message.channel.send(quote)
+
+  if msg.startswith("$original"):
+    originalMessage = (
+      f"{random.choice(originalOpeners)} — {random.choice(originalClosers)}"
+    )
+    await message.channel.send(originalMessage)
 
   if db["responding"]:
     options = starterEncouragements
