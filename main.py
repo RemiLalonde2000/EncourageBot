@@ -51,6 +51,54 @@ def getQuote():
   return quote
 
 
+def getF1DriverStandings():
+  try:
+    response = requests.get(
+      "https://api.jolpi.ca/ergast/f1/current/driverStandings.json", timeout=10
+    )
+    data = response.json()
+    standings = data["MRData"]["StandingsTable"]["StandingsLists"]
+    if not standings:
+      return "No standings data available yet for this season."
+    entries = standings[0]["DriverStandings"][:10]
+    season = standings[0]["season"]
+    lines = [f"**F1 Driver Standings — {season} Season**\n"]
+    for entry in entries:
+      pos = entry["position"]
+      driver = entry["Driver"]
+      name = f"{driver['givenName']} {driver['familyName']}"
+      points = entry["points"]
+      constructor = entry["Constructors"][0]["name"]
+      lines.append(f"`{pos}.` **{name}** ({constructor}) — {points} pts")
+    return "\n".join(lines)
+  except Exception as e:
+    return f"Could not fetch F1 standings: {e}"
+
+
+def getF1ConstructorStandings():
+  try:
+    response = requests.get(
+      "https://api.jolpi.ca/ergast/f1/current/constructorStandings.json",
+      timeout=10
+    )
+    data = response.json()
+    standings = data["MRData"]["StandingsTable"]["StandingsLists"]
+    if not standings:
+      return "No constructor standings data available yet for this season."
+    entries = standings[0]["ConstructorStandings"]
+    season = standings[0]["season"]
+    lines = [f"**F1 Constructor Standings — {season} Season**\n"]
+    for entry in entries:
+      pos = entry["position"]
+      constructor = entry["Constructor"]["name"]
+      points = entry["points"]
+      wins = entry["wins"]
+      lines.append(f"`{pos}.` **{constructor}** — {points} pts ({wins} wins)")
+    return "\n".join(lines)
+  except Exception as e:
+    return f"Could not fetch F1 constructor standings: {e}"
+
+
 def updateEncouragements(encouragingMessage):
   if "encouragements" in db.keys():
     encouragements = db["encouragements"]
@@ -126,6 +174,13 @@ async def on_message(message):
     else:
       db["responding"] = False
       await message.channel.send("Responding is off.")
+
+  if msg.startswith("$f1constructors"):
+    standings = getF1ConstructorStandings()
+    await message.channel.send(standings)
+  elif msg.startswith("$f1"):
+    standings = getF1DriverStandings()
+    await message.channel.send(standings)
 
 
 my_secret = os.environ['TOKEN']
