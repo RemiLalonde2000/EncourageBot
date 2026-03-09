@@ -6,6 +6,16 @@ import random
 from replit import db
 from keepAlive import keep_alive
 
+
+class MemoryDB(dict):
+  def keys(self):
+    return super().keys()
+
+
+if db is None:
+  print("Warning: Replit DB not configured. Falling back to in-memory storage.")
+  db = MemoryDB()
+
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
@@ -14,6 +24,20 @@ sadWords = ["sad", "depressed", "unhappy", "angry", "miserable", "depressing"]
 
 starterEncouragements = [
   "Cheer up!", "Hang in there.", "You are a great person!"
+]
+
+originalOpeners = [
+  "Today is a fresh start",
+  "Your effort matters",
+  "You are stronger than you feel",
+  "Small steps still count"
+]
+
+originalClosers = [
+  "keep moving forward 🌟",
+  "your future self will thank you 💪",
+  "you've got this 🔥",
+  "one breath at a time 🌈"
 ]
 
 if "responding" not in db.keys():
@@ -59,14 +83,20 @@ async def on_message(message):
     quote = getQuote()
     await message.channel.send(quote)
 
+  if msg.startswith("$original"):
+    originalMessage = (
+      f"{random.choice(originalOpeners)} — {random.choice(originalClosers)}"
+    )
+    await message.channel.send(originalMessage)
+
   if db["responding"]:
-    options = starterEncouragements
+    options = list(starterEncouragements)
 
     if "encouragements" in db.keys():
-      options = options.extend(db["encouragements"])
+      options.extend(db["encouragements"])
 
-    if any(word in msg for word in sadWords):
-      await message.channel.send(random.choice(db["encouragements"]))
+    if any(word in msg.lower() for word in sadWords):
+      await message.channel.send(random.choice(options))
 
   if msg.startswith("$new"):
     encouragingMessage = msg.split("$new ", 1)[1]
