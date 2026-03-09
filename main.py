@@ -89,36 +89,6 @@ async def on_message(message):
     )
     await message.channel.send(originalMessage)
 
-  if msg.startswith("$vote"):
-    pollBody = msg.split("$vote", 1)[1].strip()
-
-    if not pollBody:
-      await message.channel.send(
-        "Use: $vote Question | Option 1 | Option 2 (or just $vote Question for 👍/👎)"
-      )
-      return
-
-    parts = [part.strip() for part in pollBody.split("|") if part.strip()]
-
-    if len(parts) >= 3:
-      question = parts[0]
-      choices = parts[1:10]
-      numberEmojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"]
-      pollLines = [f"📊 **{question}**"]
-
-      for index, choice in enumerate(choices):
-        pollLines.append(f"{numberEmojis[index]} {choice}")
-
-      sentPoll = await message.channel.send("\n".join(pollLines))
-
-      for emoji in numberEmojis[:len(choices)]:
-        await sentPoll.add_reaction(emoji)
-    else:
-      question = pollBody
-      sentPoll = await message.channel.send(f"📊 **{question}**\n👍 = Yes\n👎 = No")
-      await sentPoll.add_reaction("👍")
-      await sentPoll.add_reaction("👎")
-
   if db["responding"]:
     options = list(starterEncouragements)
 
