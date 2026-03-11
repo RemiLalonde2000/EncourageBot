@@ -51,6 +51,17 @@ def getQuote():
   return quote
 
 
+def getEarthPhoto():
+  try:
+    photo_id = random.randint(1, 1084)
+    info = requests.get(f"https://picsum.photos/id/{photo_id}/info", timeout=10).json()
+    image_url = f"https://picsum.photos/id/{photo_id}/1200/800"
+    author = info.get("author", "Unknown")
+    return image_url, author
+  except Exception as e:
+    return None, None
+
+
 def getF1DriverStandings():
   try:
     response = requests.get(
@@ -174,6 +185,16 @@ async def on_message(message):
     else:
       db["responding"] = False
       await message.channel.send("Responding is off.")
+
+  if msg.startswith("$earth"):
+    image_url, author = getEarthPhoto()
+    if image_url:
+      embed = discord.Embed(title="🌍 A Beautiful Part of the World", color=0x1a73e8)
+      embed.set_image(url=image_url)
+      embed.set_footer(text=f"Photo by {author}")
+      await message.channel.send(embed=embed)
+    else:
+      await message.channel.send("Could not fetch an Earth photo right now.")
 
   if msg.startswith("$f1constructors"):
     standings = getF1ConstructorStandings()
