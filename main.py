@@ -51,6 +51,30 @@ def getQuote():
   return quote
 
 
+def getEarthPhoto():
+  try:
+    photo_id = random.randint(1, 1084)
+    info = requests.get(f"https://picsum.photos/id/{photo_id}/info", timeout=10).json()
+    image_url = f"https://picsum.photos/id/{photo_id}/1200/800"
+    author = info.get("author", "Unknown")
+    return image_url, author
+  except Exception as e:
+    return None, None
+
+
+def getAnimalFact():
+  animals = ["dog", "cat", "panda", "fox", "red_panda", "koala", "bird", "raccoon", "kangaroo"]
+  animal = random.choice(animals)
+  try:
+    response = requests.get(f"https://some-random-api.com/animal/{animal}", timeout=10)
+    data = response.json()
+    fact = data.get("fact", "")
+    image = data.get("image", "")
+    return animal.replace("_", " ").title(), fact, image
+  except Exception:
+    return None, None, None
+
+
 def getF1DriverStandings():
   try:
     response = requests.get(
@@ -175,6 +199,26 @@ async def on_message(message):
       db["responding"] = False
       await message.channel.send("Responding is off.")
 
+  if msg.startswith("$earth"):
+    image_url, author = getEarthPhoto()
+    if image_url:
+      embed = discord.Embed(title="🌍 A Beautiful Part of the World", color=0x1a73e8)
+      embed.set_image(url=image_url)
+      embed.set_footer(text=f"Photo by {author}")
+      await message.channel.send(embed=embed)
+    else:
+      await message.channel.send("Could not fetch an Earth photo right now.")
+
+  if msg.startswith("$animal_fact"):
+    animal_name, fact, image = getAnimalFact()
+    if fact:
+      embed = discord.Embed(title=f"🐾 Animal Fact — {animal_name}", description=fact, color=0x2ecc71)
+      if image:
+        embed.set_image(url=image)
+      await message.channel.send(embed=embed)
+    else:
+      await message.channel.send("Could not fetch an animal fact right now.")
+
   if msg.startswith("$f1constructors"):
     standings = getF1ConstructorStandings()
     await message.channel.send(standings)
@@ -182,7 +226,24 @@ async def on_message(message):
     standings = getF1DriverStandings()
     await message.channel.send(standings)
 
+  if msg.startswith("$rps"):
+    parts = msg.split()
+    choices = ["rock", "paper", "scissors"]
+    if len(parts) < 2 or parts[1].lower() not in choices:
+      await message.channel.send("Usage: `$rps [rock|paper|scissors]`")
+    else:
+      player = parts[1].lower()
+      bot = random.choice(choices)
+      if player == bot:
+        result = "It's a tie!"
+      elif (player == "rock" and bot == "scissors") or \
+           (player == "paper" and bot == "rock") or \
+           (player == "scissors" and bot == "paper"):
+        result = "You win! 🎉"
+      else:
+        result = "You lose! 😈"
+      await message.channel.send(f"You chose **{player}**, I chose **{bot}**. {result}")
 
-my_secret = os.environ['TOKEN']
+
 keep_alive()
-client.run(my_secret)
+client.run(os.environ["DISCORD_TOKEN"])
